@@ -1,0 +1,6 @@
+{
+  "name": "Identificador de Aço",
+  "description": "Aplicativo de alta fidelidade para identificação de tipos de aço via ensaio de centelhamento por visão computacional, telemetria de ligas e espectrometria.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
