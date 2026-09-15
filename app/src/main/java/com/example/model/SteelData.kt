@@ -37,9 +37,9 @@ object SteelPresets {
         classification = "Aço Carbono Médio para Construção Mecânica",
         confidencePercent = 94,
         summary = "Excelente relação entre tenacidade e temperabilidade superficial por indução/chama; feixe com densas explosões ramificadas.",
-        sparkColor = "Amarelo-Palha Brilhante para Branco",
-        streamLength = "1.4 m (Comprimento Moderado)",
-        burstPattern = "Explosões Estreladas Abundantes (Estrela C Tipo 3)",
+        sparkColor = "Bright White",
+        streamLength = "~1.3m",
+        burstPattern = "Explosive stars",
         alloys = listOf(
             AlloyComponent("Carbono", "C", 0.46, "0.43 - 0.50%", "Controla dureza mecânica e intensidade de ramificações"),
             AlloyComponent("Manganês", "Mn", 0.72, "0.60 - 0.90%", "Melhora a temperabilidade do núcleo e desoxidação"),
@@ -54,7 +54,7 @@ object SteelPresets {
         ),
         carbonLevel = 0.45,
         isMagnetic = true,
-        alloySignatures = listOf("Branching bursts")
+        alloySignatures = listOf("Explosive stars", "Branching bursts")
     )
 
     val sae8620 = SteelGrade(
@@ -208,14 +208,14 @@ object SteelPresets {
         classification = "Aço de Baixo Carbono",
         confidencePercent = 95,
         summary = "Aço versátil para construção; feixe longo com poucas explosões bifurcadas.",
-        sparkColor = "Branco/Amarelo",
-        streamLength = "1.7 m",
+        sparkColor = "White-Straw",
+        streamLength = "~1.6m",
         burstPattern = "Poucas explosões pequenas e bifurcadas",
         alloys = listOf(AlloyComponent("Carbono", "C", 0.20, "0.18 - 0.23%", "Base para ductilidade")),
         characteristics = listOf(SparkCharacteristic("Frequência", "Baixa", "Poucas ramificações")),
-        carbonLevel = 0.20,
+        carbonLevel = 0.15,
         isMagnetic = true,
-        alloySignatures = listOf("Forked bursts")
+        alloySignatures = listOf("Long straight lines", "Forked bursts")
     )
 
     val sae1095 = SteelGrade(
@@ -333,7 +333,7 @@ object SteelPresets {
     val unidentified = SteelGrade(
         code = "N/A",
         standard = "---",
-        classification = "Material não Identificado",
+        classification = "Material não Encontrado",
         confidencePercent = 0,
         summary = "As características visuais capturadas não correspondem a nenhum padrão de faíscas de aço conhecido na base de dados.",
         sparkColor = "---",
@@ -346,9 +346,76 @@ object SteelPresets {
         alloySignatures = emptyList()
     )
 
+    val grade16MnCr5 = SteelGrade(
+        code = "16MnCr5",
+        standard = "DIN / ISO",
+        classification = "Aço Cementação Cr-Mn",
+        confidencePercent = 86,
+        summary = "Aço para cementação com boa temperabilidade superficial; feixe com ramificações finas e fluxo suprimido.",
+        sparkColor = "Orange-Straw",
+        streamLength = "~1.2m",
+        burstPattern = "Fine forks with suppressed stream",
+        alloys = listOf(
+            AlloyComponent("Carbono", "C", 0.16, "0.14 - 0.19%", "Baixo carbono para núcleo tenaz"),
+            AlloyComponent("Manganês", "Mn", 1.15, "1.00 - 1.30%", "Melhora a temperabilidade"),
+            AlloyComponent("Cromo", "Cr", 0.95, "0.80 - 1.10%", "Resistência ao desgaste")
+        ),
+        characteristics = listOf(
+            SparkCharacteristic("Fluxo", "Suprimido", "Menor volume de faíscas devido aos elementos de liga"),
+            SparkCharacteristic("Ramificação", "Garfos Finos", "Bifurcações discretas na ponta")
+        ),
+        carbonLevel = 0.16,
+        isMagnetic = true,
+        alloySignatures = listOf("Suppressed stream", "Fine forks")
+    )
+
+    val vc140 = SteelGrade(
+        code = "VC-140",
+        standard = "ABNT",
+        classification = "Aço Liga Cr para Construção Mecânica",
+        confidencePercent = 84,
+        summary = "Aço de alta resistência mecânica; feixe amarelado com explosões em formato de flor única.",
+        sparkColor = "Yellow-Orange",
+        streamLength = "~1.4m",
+        burstPattern = "Single flower bursts",
+        alloys = listOf(
+            AlloyComponent("Carbono", "C", 0.40, "0.36 - 0.44%", "Resistência mecânica"),
+            AlloyComponent("Cromo", "Cr", 1.00, "0.90 - 1.20%", "Temperabilidade")
+        ),
+        characteristics = listOf(
+            SparkCharacteristic("Explosão", "Flor Única", "Padrão de explosão concêntrico e limpo")
+        ),
+        carbonLevel = 0.40,
+        isMagnetic = true,
+        alloySignatures = listOf("Single flower bursts")
+    )
+
+    val vc130 = SteelGrade(
+        code = "VC-130",
+        standard = "ABNT / AISI D3",
+        classification = "Aço Ferramenta Alto Cr Alto C (D3)",
+        confidencePercent = 82,
+        summary = "Aço ferramenta de altíssima dureza; feixe curto com faíscas aderentes e aglomerados densos.",
+        sparkColor = "Dull Orange",
+        streamLength = "~0.6m",
+        burstPattern = "Bushy clusters and adhering sparks",
+        alloys = listOf(
+            AlloyComponent("Carbono", "C", 2.00, "1.90 - 2.20%", "Alta dureza"),
+            AlloyComponent("Cromo", "Cr", 12.00, "11.0 - 13.0%", "Resistência à abrasão")
+        ),
+        characteristics = listOf(
+            SparkCharacteristic("Aderência", "Alta", "Faíscas que parecem 'grudar' no rebolo"),
+            SparkCharacteristic("Densidade", "Clusters Arbustivos", "Explosões densas e volumosas em espaço curto")
+        ),
+        carbonLevel = 2.0,
+        isMagnetic = true,
+        alloySignatures = listOf("Bushy clusters", "Adhering sparks")
+    )
+
     val allGrades = listOf(
         sae1045, sae8620, sae4140, aisi304, saeD2, sae5160,
-        wroughtIron, sae1020, sae1095, sae4340, aisiO1, aisiH13, aisiM2, aisi420, castIron
+        wroughtIron, sae1020, sae1095, sae4340, aisiO1, aisiH13, aisiM2, aisi420, castIron,
+        grade16MnCr5, vc140, vc130
     )
 }
 

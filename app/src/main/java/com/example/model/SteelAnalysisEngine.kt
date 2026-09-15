@@ -10,7 +10,8 @@ data class VisualFeatures(
     val color: String,
     val streamLengthMeters: Double,
     val burstFrequency: Double, // Normalized 0.0 to 1.0, correlates with carbon
-    val signatures: List<String>
+    val signatures: List<String>,
+    val intensityMultiplier: Double = 1.0 // Global compensation for grinding pressure
 )
 
 /**
@@ -40,33 +41,54 @@ object SteelAnalysisEngine {
         }
     }
 
+    private val colorDistanceMap = mapOf(
+        "White" to listOf("Straw", "Yellow", "Bright White", "White-Straw"),
+        "Straw" to listOf("White", "Yellow", "Orange-Straw", "White-Straw"),
+        "Yellow" to listOf("White", "Straw", "Orange", "Yellow-Orange"),
+        "Orange" to listOf("Yellow", "Red", "Yellow-Orange", "Dull Orange", "Orange-Straw"),
+        "Red" to listOf("Orange", "Dark Red", "Laranja-Avermelhado"),
+        "Bright White" to listOf("White", "White-Straw"),
+        "White-Straw" to listOf("White", "Straw", "Bright White"),
+        "Orange-Straw" to listOf("Orange", "Straw"),
+        "Yellow-Orange" to listOf("Yellow", "Orange"),
+        "Dull Orange" to listOf("Orange", "Red")
+    )
+
     private fun calculateMatchScore(grade: SteelGrade, features: VisualFeatures): Double {
-        // Se a cor for desconhecida ou comprimento zero, a probabilidade de ser faísca é nula
-        if (features.color == "Unknown" || features.streamLengthMeters <= 0.1) {
+        // Apply Intensity Compensation
+        val compLength = features.streamLengthMeters / features.intensityMultiplier
+        val compFrequency = (features.burstFrequency / features.intensityMultiplier).coerceIn(0.0, 2.5)
+
+        if (features.color == "Unknown" || compLength <= 0.1) {
             return 0.0
         }
 
         var score = 0.0
         
-        // 1. Color Matching (30% weight)
-        // Check if the detected color keyword exists in the grade description
-        if (grade.sparkColor.contains(features.color, ignoreCase = true)) {
-            score += 30.0
+        // 1. Weighted Spectral Matcher (20% weight)
+        val targetColor = features.color.lowercase()
+        val gradeColor = grade.sparkColor.lowercase()
+        
+        if (gradeColor.contains(targetColor)) {
+            score += 20.0
+        } else {
+            // Check spectral proximity
+            val relatedColors = colorDistanceMap.entries.find { it.key.lowercase() == targetColor }?.value ?: emptyList()
+            if (relatedColors.any { gradeColor.contains(it.lowercase()) }) {
+                score += 10.0 // Half points for proximal colors
+            }
         }
 
-        // 2. Stream Length Proximity (30% weight)
+        // 2. Stream Length Proximity (20% weight)
         val gradeLength = extractLength(grade.streamLength)
-        val lengthDiff = abs(gradeLength - features.streamLengthMeters)
-        // Score decreases as difference increases, max 30 points
-        score += (2.0 - lengthDiff).coerceAtLeast(0.0) * 15.0 
+        val lengthDiff = abs(gradeLength - compLength)
+        score += (2.0 - lengthDiff).coerceAtLeast(0.0) * 10.0 
 
         // 3. Carbon/Burst Frequency Correlation (20% weight)
-        // Spark burst frequency is directly proportional to carbon content
-        val carbonDiff = abs(grade.carbonLevel - features.burstFrequency)
+        val carbonDiff = abs(grade.carbonLevel - compFrequency)
         score += (1.0 - carbonDiff).coerceAtLeast(0.0) * 20.0
 
-        // 4. Alloy Signature Detection (20% weight)
-        // Matches specific visual patterns like "Spear Tip", "Thorns", "Bushy Stars"
+        // 4. Alloy Signature Detection (40% weight) - Increased Priority
         var signatureMatches = 0
         features.signatures.forEach { featureSig ->
             if (grade.alloySignatures.any { gradeSig -> gradeSig.contains(featureSig, ignoreCase = true) }) {
@@ -75,10 +97,9 @@ object SteelAnalysisEngine {
         }
         
         if (features.signatures.isNotEmpty()) {
-            score += (signatureMatches.toDouble() / features.signatures.size) * 20.0
+            score += (signatureMatches.toDouble() / features.signatures.size) * 40.0
         } else if (grade.alloySignatures.isEmpty()) {
-            // Neutral bonus if neither have specific signatures (e.g., Wrought Iron/Low Carbon)
-            score += 10.0
+            score += 15.0 // Neutral bonus
         }
 
         return score

@@ -1,7 +1,12 @@
 package com.example.ui.components
 
+import android.content.ContentValues
+import android.os.Build
+import android.provider.MediaStore
 import android.Manifest
+import android.content.Context
 import android.net.Uri
+import android.os.Environment
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -135,6 +140,8 @@ fun SteelCaptureSection(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && tempUri != null) {
+            // Salva na galeria pública
+            saveMediaToGallery(context, tempUri!!, true)
             lastCapturedNotice = strings.photoCapturedSuccess
             onSampleCaptured(grade, tempUri)
         } else {
@@ -147,6 +154,8 @@ fun SteelCaptureSection(
         contract = ActivityResultContracts.CaptureVideo()
     ) { success ->
         if (success && tempUri != null) {
+            // Salva na galeria pública
+            saveMediaToGallery(context, tempUri!!, false)
             lastCapturedNotice = strings.recordedVideoAnalysis
             onSampleCaptured(grade, tempUri)
         } else {
@@ -423,6 +432,46 @@ fun SteelCaptureSection(
                 language = language
             )
         }
+    }
+}
+
+/**
+ * Salva a mídia capturada na galeria pública do dispositivo
+ */
+private fun saveMediaToGallery(context: Context, uri: Uri, isImage: Boolean) {
+    try {
+        val resolver = context.contentResolver
+        val contentValues = ContentValues().apply {
+            val timestamp = System.currentTimeMillis()
+            put(MediaStore.MediaColumns.DISPLAY_NAME, "ScanAco_${timestamp}")
+            put(MediaStore.MediaColumns.MIME_TYPE, if (isImage) "image/jpeg" else "video/mp4")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.MediaColumns.RELATIVE_PATH, if (isImage) Environment.DIRECTORY_PICTURES else Environment.DIRECTORY_MOVIES)
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+        }
+
+        val collection = if (isImage) {
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        } else {
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        }
+
+        val destinationUri = resolver.insert(collection, contentValues)
+        if (destinationUri != null) {
+            resolver.openInputStream(uri)?.use { input ->
+                resolver.openOutputStream(destinationUri)?.use { output ->
+                    input.copyTo(output)
+                }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                contentValues.clear()
+                contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                resolver.update(destinationUri, contentValues, null, null)
+            }
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
 }
 

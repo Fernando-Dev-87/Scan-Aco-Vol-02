@@ -95,7 +95,7 @@ object LocalizationManager {
             burstPatternLabel = "PADRÃO DE EXPLOSÃO",
             recordedVideoAnalysis = "VÍDEO ANALISADO COM SUCESSO",
             photoCapturedSuccess = "FOTO ANALISADA VIA ESPECTROMETRIA",
-            unidentifiedMaterial = "Material não Identificado"
+            unidentifiedMaterial = "Material não Encontrado"
         )
         AppLanguage.EN -> UiStrings(
             appSubtitle = "STEEL IDENTIFIER • SPECTRO-CV",
@@ -135,7 +135,7 @@ object LocalizationManager {
             burstPatternLabel = "BURST PATTERN",
             recordedVideoAnalysis = "VIDEO PROCESSED SUCCESSFULLY",
             photoCapturedSuccess = "PHOTO ANALYZED VIA SPECTROMETRY",
-            unidentifiedMaterial = "Unidentified Material"
+            unidentifiedMaterial = "Material not Found"
         )
         AppLanguage.ES -> UiStrings(
             appSubtitle = "IDENTIFICADOR DE ACEROS • SPECTRO-CV",
@@ -175,7 +175,7 @@ object LocalizationManager {
             burstPatternLabel = "PATRÓN DE ESTALLIDO",
             recordedVideoAnalysis = "VÍDEO ANALIZADO CON ÉXITO",
             photoCapturedSuccess = "FOTO ANALIZADA POR ESPECTROMETRÍA",
-            unidentifiedMaterial = "Material no Identificado"
+            unidentifiedMaterial = "Material no Encontrado"
         )
         AppLanguage.DE -> UiStrings(
             appSubtitle = "STAHL-IDENTIFIKATOR • SPECTRO-CV",
@@ -215,7 +215,7 @@ object LocalizationManager {
             burstPatternLabel = "EXPLOSIONSMUSTER",
             recordedVideoAnalysis = "VIDEO ERFOLGREICH ANALYSIERT",
             photoCapturedSuccess = "FOTO PER SPEKTROMETRIE ANALYSIERT",
-            unidentifiedMaterial = "Nicht identifiziertes Material"
+            unidentifiedMaterial = "Material nicht gefunden"
         )
         AppLanguage.JA -> UiStrings(
             appSubtitle = "鋼種識別アナライザー • SPECTRO-CV",
@@ -255,7 +255,7 @@ object LocalizationManager {
             burstPatternLabel = "破裂形態",
             recordedVideoAnalysis = "動画分析が完了しました",
             photoCapturedSuccess = "写真分光分析が完了しました",
-            unidentifiedMaterial = "未確認の材料"
+            unidentifiedMaterial = "材料が見つかりません"
         )
     }
 
@@ -277,6 +277,9 @@ object LocalizationManager {
             "AISI M2" -> "High-Speed Steel (M2)"
             "AISI 420" -> "Martensitic Stainless Steel"
             "Cast Iron" -> "Gray Cast Iron"
+            "16MnCr5" -> "Cr-Mn Carburizing Steel"
+            "VC-140" -> "Cr-Alloy Mechanical Construction Steel"
+            "VC-130" -> "High Carbon High Chromium Tool Steel (D3)"
             "N/A" -> "Unidentified Material"
             else -> grade.classification
         }
@@ -296,7 +299,10 @@ object LocalizationManager {
             "AISI M2" -> "Acero Rápido (HSS)"
             "AISI 420" -> "Acero Inoxidable Martensítico"
             "Cast Iron" -> "Hierro Fundido Gris"
-            "N/A" -> "Material não Identificado"
+            "16MnCr5" -> "Acero de Cementación Cr-Mn"
+            "VC-140" -> "Acero Aleado Cr para Construcción Mecánica"
+            "VC-130" -> "Acero para Herramientas Alto Cr Alto C (D3)"
+            "N/A" -> "Material não Encontrado"
             else -> grade.classification
         }
         AppLanguage.DE -> when (grade.code) {
@@ -315,6 +321,9 @@ object LocalizationManager {
             "AISI M2" -> "Schnellarbeitsstahl HS6-5-2 (DIN 1.3343)"
             "AISI 420" -> "Edelstahl X20Cr13 (DIN 1.4021)"
             "Cast Iron" -> "Grauguss GG-25 (DIN 1691)"
+            "16MnCr5" -> "Einsatzstahl 16MnCr5 (DIN 1.7131)"
+            "VC-140" -> "Cr-legierter Baustahl VC-140"
+            "VC-130" -> "Kaltarbeitsstahl X210Cr12 (DIN 1.2080 / D3)"
             "N/A" -> "Nicht identifiziertes Material"
             else -> grade.classification
         }
@@ -334,7 +343,10 @@ object LocalizationManager {
             "AISI M2" -> "高速度工具鋼 (JIS SKH51)"
             "AISI 420" -> "マルテンサイト系ステンレス鋼 (JIS SUS420)"
             "Cast Iron" -> "ねずみ鋳鉄 (JIS FC250)"
-            "N/A" -> "未確認の材料"
+            "16MnCr5" -> "クロムマンガン鋼 (JIS SMnC420)"
+            "VC-140" -> "機械構造用合金鋼 VC-140"
+            "VC-130" -> "冷間金型用合金工具鋼 (JIS SKD1 / D3)"
+            "N/A" -> "材料が見つかりません"
             else -> grade.classification
         }
     }
@@ -359,6 +371,8 @@ object LocalizationManager {
             "AISI M2" -> "DIN EN ISO 4957 (1.3343)"
             "AISI 420" -> "DIN EN 10088 (1.4021)"
             "Cast Iron" -> "DIN EN 1561"
+            "16MnCr5" -> "DIN EN 10084 (1.7131)"
+            "VC-130" -> "DIN EN ISO 4957 (1.2080)"
             else -> "DIN / ISO"
         }
         AppLanguage.JA -> when (grade.code) {
@@ -377,6 +391,8 @@ object LocalizationManager {
             "AISI M2" -> "JIS G 4403 (SKH51)"
             "AISI 420" -> "JIS G 4303 (SUS420)"
             "Cast Iron" -> "JIS G 5501 (FC250)"
+            "16MnCr5" -> "JIS G 4053 (SMnC420)"
+            "VC-130" -> "JIS G 4404 (SKD1)"
             else -> "JIS G Standard"
         }
     }
