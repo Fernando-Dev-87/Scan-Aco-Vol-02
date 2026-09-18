@@ -2,117 +2,79 @@ package com.example.model
 
 import kotlin.math.abs
 
-/**
- * VisualFeatures represents the processed optical data from the camera
- * after CV analysis of sparks.
- */
 data class VisualFeatures(
     val color: String,
     val streamLengthMeters: Double,
-    val burstFrequency: Double, // Normalized 0.0 to 1.0, correlates with carbon
+    val burstFrequency: Double, // Relacionado ao teor de carbono/explosões
     val signatures: List<String>,
-    val intensityMultiplier: Double = 1.0 // Global compensation for grinding pressure
+    val intensityMultiplier: Double = 1.0
 )
 
-/**
- * SteelAnalysisEngine provides the offline matching logic for spark identification.
- * It compares real-time CV data against the local Knowledge Base.
- */
 object SteelAnalysisEngine {
 
     /**
-     * Matches the observed visual features against the preset steel grades.
-     * Uses a weighted scoring system based on color, length, carbon level, and alloy signatures.
+     * Motor de Combinação Técnica (Match Engine)
+     * Compara as características capturadas (OpenCV/Morfologia) com a base de dados técnica.
      */
     fun matchGrade(features: VisualFeatures): SteelGrade {
-        val grades = SteelPresets.allGrades
-        
-        val bestMatch = grades.maxByOrNull { grade ->
-            calculateMatchScore(grade, features)
-        }
-        
-        val bestScore = bestMatch?.let { calculateMatchScore(it, features) } ?: 0.0
-        
-        // Se a pontuação for muito baixa (ex: não parece uma faísca), retorna não identificado
-        return if (bestScore < 20.0) {
-            SteelPresets.unidentified
-        } else {
-            bestMatch ?: SteelPresets.unidentified
-        }
-    }
+        if (features.color == "Unknown") return SteelPresets.unidentified
 
-    private val colorDistanceMap = mapOf(
-        "White" to listOf("Straw", "Yellow", "Bright White", "White-Straw"),
-        "Straw" to listOf("White", "Yellow", "Orange-Straw", "White-Straw"),
-        "Yellow" to listOf("White", "Straw", "Orange", "Yellow-Orange"),
-        "Orange" to listOf("Yellow", "Red", "Yellow-Orange", "Dull Orange", "Orange-Straw"),
-        "Red" to listOf("Orange", "Dark Red", "Laranja-Avermelhado"),
-        "Bright White" to listOf("White", "White-Straw"),
-        "White-Straw" to listOf("White", "Straw", "Bright White"),
-        "Orange-Straw" to listOf("Orange", "Straw"),
-        "Yellow-Orange" to listOf("Yellow", "Orange"),
-        "Dull Orange" to listOf("Orange", "Red")
-    )
+        var bestMatch: SteelGrade? = null
+        var highestScore = -1.0
 
-    private fun calculateMatchScore(grade: SteelGrade, features: VisualFeatures): Double {
-        // Apply Intensity Compensation
-        val compLength = features.streamLengthMeters / features.intensityMultiplier
-        val compFrequency = (features.burstFrequency / features.intensityMultiplier).coerceIn(0.0, 2.5)
-
-        if (features.color == "Unknown" || compLength <= 0.1) {
-            return 0.0
-        }
-
-        var score = 0.0
-        
-        // 1. Weighted Spectral Matcher (20% weight)
-        val targetColor = features.color.lowercase()
-        val gradeColor = grade.sparkColor.lowercase()
-        
-        if (gradeColor.contains(targetColor)) {
-            score += 20.0
-        } else {
-            // Check spectral proximity
-            val relatedColors = colorDistanceMap.entries.find { it.key.lowercase() == targetColor }?.value ?: emptyList()
-            if (relatedColors.any { gradeColor.contains(it.lowercase()) }) {
-                score += 10.0 // Half points for proximal colors
+        for (grade in SteelPresets.allGrades) {
+            val score = calculateMatchScore(grade, features)
+            if (score > highestScore) {
+                highestScore = score
+                bestMatch = grade
             }
         }
 
-        // 2. Stream Length Proximity (20% weight)
-        val gradeLength = extractLength(grade.streamLength)
-        val lengthDiff = abs(gradeLength - compLength)
-        score += (2.0 - lengthDiff).coerceAtLeast(0.0) * 10.0 
+        // Se a pontuação for muito baixa (< 25%), não identifica o material
+        return if (highestScore < 25.0) SteelPresets.unidentified else bestMatch!!
+    }
 
-        // 3. Carbon/Burst Frequency Correlation (20% weight)
-        val carbonDiff = abs(grade.carbonLevel - compFrequency)
-        score += (1.0 - carbonDiff).coerceAtLeast(0.0) * 20.0
+    private fun calculateMatchScore(grade: SteelGrade, features: VisualFeatures): Double {
+        var score = 0.0
+        
+        // 1. Rigorous Color Logic (35% weight)
+        val targetColor = features.color.lowercase()
+        val gradeColor = grade.sparkColor.lowercase()
+        
+        // Se a cor for fundamentalmente diferente, a pontuação cai drasticamente
+        if (gradeColor.contains(targetColor) || targetColor.contains(gradeColor.split("-").first())) {
+            score += 35.0
+        } else {
+            // Penalidade severa para cores totalmente incompatíveis
+            return 0.0 
+        }
 
-        // 4. Alloy Signature Detection (40% weight) - Increased Priority
+        // 2. Carbon Level / Branching Morphology (35% weight)
+        // Diferenciação crítica entre 1020 (carbono 0.2) e 1045 (carbono 0.45)
+        val carbonDiff = abs(grade.carbonLevel - features.burstFrequency)
+        if (carbonDiff < 0.1) {
+            score += 35.0
+        } else {
+            score += (0.5 - carbonDiff).coerceAtLeast(0.0) * 70.0
+        }
+
+        // 3. Alloy Signature Match (30% weight)
+        // Baseado em padrões técnicos como "Spear Tip", "Dendritic", "Willow leaf"
         var signatureMatches = 0
         features.signatures.forEach { featureSig ->
-            if (grade.alloySignatures.any { gradeSig -> gradeSig.contains(featureSig, ignoreCase = true) }) {
+            if (grade.alloySignatures.any { gradeSig -> 
+                gradeSig.contains(featureSig, ignoreCase = true) || 
+                featureSig.contains(gradeSig, ignoreCase = true) 
+            }) {
                 signatureMatches++
             }
         }
         
         if (features.signatures.isNotEmpty()) {
-            score += (signatureMatches.toDouble() / features.signatures.size) * 40.0
-        } else if (grade.alloySignatures.isEmpty()) {
-            score += 15.0 // Neutral bonus
+            val matchRatio = signatureMatches.toDouble() / features.signatures.size
+            score += matchRatio * 30.0
         }
 
         return score
-    }
-    
-    /**
-     * Helper to parse numerical length from descriptive strings like "1.4 m (Moderate)"
-     */
-    private fun extractLength(lengthStr: String): Double {
-        return try {
-            lengthStr.split(" ")[0].toDoubleOrNull() ?: 1.0
-        } catch (_: Exception) {
-            1.0
-        }
     }
 }
